@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nti_task_5/my_home_page.dart';
+import 'package:nti_task_5/login_page.dart';
 import 'package:nti_task_5/profile_page.dart';
 import 'package:nti_task_5/sign_up.dart';
 import 'package:nti_task_5/tasks_page.dart';
@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
         '/profilepage': (context) =>
             const ProfilePage(totalTasks: 0, doneTasks: 0, userName: ''),
       },
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const LoginPage(title: 'Flutter Demo Home Page'),
     );
   }
 }

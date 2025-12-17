@@ -36,9 +36,6 @@ class SqlDb {
   }
 
   _onUpgrade(Database db, int oldVersion, int newVersion) {
-    // await db.execute('''
-    //   ALTER TABLE notes ADD COLUMN "done" INTEGER DEFAULT 0
-    // ''');
     print("onUpgrade called ==============================");
   }
 
@@ -71,24 +68,5 @@ class SqlDb {
     String path = join(databasepath, 'ragabdb.db');
     await deleteDatabase(path);
     print("database deleted ==============================");
-  }
-
-  numOfRows(String sql) async {
-    Database? mydb = await database;
-    int response = Sqflite.firstIntValue(await mydb!.rawQuery(sql))!;
-    print("$response ==============================");
-    return response;
-  }
-
-  numbofTasks() {
-    numOfRows("SELECT COUNT(*) FROM notes").then((value) {
-      return value;
-    });
-  }
-
-  copyOfDatabaseAsList(String sql) async {
-    Database? mydb = await database;
-    List<Map> response = await mydb!.rawQuery(sql);
-    return response;
   }
 }

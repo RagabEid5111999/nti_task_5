@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:nti_task_5/shared_preferances_class.dart';
 import 'package:nti_task_5/tasks_page.dart';
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key, required this.title});
 
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _LoginPageState extends State<LoginPage> {
   String userName = '';
 
   TextEditingController emailController = TextEditingController();
@@ -67,13 +67,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 onPressed: () async {
                   String email = emailController.text;
                   String password = passwordController.text;
-                  print(
-                    "email: $email, password: $password =============================",
-                  );
                   List<String>? userData = await SharedPreferencesClass()
                       .getValue(email);
-                  print("$userData =============================");
-
                   if (userData == null || userData[2] != password) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Invalid email or password')),
@@ -83,7 +78,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     ScaffoldMessenger.of(
                       context,
                     ).showSnackBar(SnackBar(content: Text('Login Successful')));
-                    // Navigator.pushNamed(context, '/taskspage');
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => TasksPage(userName: userName),

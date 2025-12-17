@@ -14,7 +14,7 @@ class TasksPage extends StatefulWidget {
 class _TasksPageState extends State<TasksPage> {
   TextEditingController taskController = TextEditingController();
   SqlDb sqlDb = SqlDb();
-  late List<Map> dataList = [];
+  List<Map> dataList = [];
   bool isLoading = true;
   int doneTasks = 0;
   bool onChanged = false;
@@ -85,9 +85,6 @@ class _TasksPageState extends State<TasksPage> {
                             'done': 0,
                           });
                         }
-                        // Navigator.pushReplacementNamed(context, '/taskspage');
-                        // totalTasks++;
-
                         setState(() {});
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -177,8 +174,6 @@ class _TasksPageState extends State<TasksPage> {
                                         ? true
                                         : false,
                                     onChanged: (value) {
-                                      // Handle checkbox state change
-                                      // value = !value!;
                                       value!
                                           ? {
                                               sqlDb.updateData(
@@ -216,12 +211,6 @@ class _TasksPageState extends State<TasksPage> {
                                               dataList[index]['id'],
                                         );
                                       }
-                                      // totalTasks--;
-                                      // Navigator.pushReplacementNamed(
-                                      //   context,
-                                      //   '/taskspage',
-                                      // );
-
                                       setState(() {});
                                     },
                                   ),
@@ -244,7 +233,6 @@ class _TasksPageState extends State<TasksPage> {
           BottomNavigationBarItem(
             icon: IconButton(
               onPressed: () {
-                // Navigator.of(context).pushNamed('/profilepage');
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(
@@ -260,7 +248,6 @@ class _TasksPageState extends State<TasksPage> {
               icon: const Icon(Icons.person),
             ),
             label: 'Profile',
-            // activeIcon: Text("data"),
           ),
         ],
       ),

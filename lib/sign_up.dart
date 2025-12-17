@@ -13,7 +13,6 @@ class _SignUpState extends State<SignUp> {
   TextEditingController passwordController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController nameController = TextEditingController();
-  static final int _idCounter = 0;
 
   @override
   void dispose() {
@@ -79,18 +78,11 @@ class _SignUpState extends State<SignUp> {
                       const SnackBar(content: Text('Please fill all fields')),
                     );
                   } else {
-                    print("sign up successful 1 =============================");
                     List<String> userData = [name, email, password];
-                    print("sign up successful 2 =============================");
-
                     SharedPreferencesClass().setValue(userData[1], userData);
-                    print("sign up successful 3 =============================");
-
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Sign Up Successful')),
                     );
-                    print("sign up successful 4 =============================");
-
                     nameController.clear();
                     emailController.clear();
                     passwordController.clear();
