@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:nti_task_5/profile_page.dart';
 import 'package:nti_task_5/sql_db.dart';
+import 'package:sqflite/sqflite.dart';
 
 class TasksPage extends StatefulWidget {
-  const TasksPage({super.key});
+  final String userName;
+  const TasksPage({super.key, required this.userName});
 
   @override
   State<TasksPage> createState() => _TasksPageState();
@@ -12,15 +15,24 @@ class _TasksPageState extends State<TasksPage> {
   TextEditingController taskController = TextEditingController();
   SqlDb sqlDb = SqlDb();
   late List<Map> dataList = [];
-  late int doneTasks = 0;
+  bool isLoading = true;
+  int doneTasks = 0;
   bool onChanged = false;
 
   Future<void> setVaraible() async {
-    await sqlDb.readData("SELECT COUNT(*) FROM notes WHERE done = 1").then((
-      value,
-    ) {
-      doneTasks = value[0]['COUNT(*)'];
-    });
+    List<Map> respons = await sqlDb.readData("SELECT * FROM notes");
+    dataList.addAll(respons);
+    doneTasks =
+        Sqflite.firstIntValue(
+          await sqlDb.database!.then(
+            (db) => db!.rawQuery("SELECT COUNT(*) FROM notes WHERE done = 1"),
+          ),
+        ) ??
+        0;
+    isLoading = false;
+    if (this.mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -48,7 +60,7 @@ class _TasksPageState extends State<TasksPage> {
             children: [
               // Display total tasks and done tasks////////////////////////
               Text(
-                'Total Tasks: ${dataList.length} \nDone Tasks: $doneTasks',
+                'Total Tasks: ${dataList.length}\nDone Tasks: $doneTasks',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -59,15 +71,24 @@ class _TasksPageState extends State<TasksPage> {
                 controller: taskController,
                 decoration: InputDecoration(
                   suffixIcon: IconButton(
-                    onPressed: () {
+                    onPressed: () async {
                       // Add task functionality
                       if (taskController.text.isNotEmpty) {
-                        setState(() {
-                          sqlDb.insertData(
-                            "INSERT INTO notes (title, note) VALUES ('Task', '${taskController.text}')",
-                          );
-                          dataList;
-                        });
+                        int response = await sqlDb.insertData(
+                          "INSERT INTO notes (title, note) VALUES ('Task', '${taskController.text}')",
+                        );
+                        if (response > 0) {
+                          dataList.add({
+                            'id': response,
+                            'title': 'Task',
+                            'note': taskController.text,
+                            'done': 0,
+                          });
+                        }
+                        // Navigator.pushReplacementNamed(context, '/taskspage');
+                        // totalTasks++;
+
+                        setState(() {});
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text('Task Added: ${taskController.text}'),
@@ -86,8 +107,131 @@ class _TasksPageState extends State<TasksPage> {
                   labelText: 'add your task here',
                 ),
               ),
+              isLoading
+                  ? Text("data is loading...")
+                  : Expanded(
+                      child: ListView.builder(
+                        itemCount: dataList.length,
+                        itemBuilder: (context, index) {
+                          return Row(
+                            children: [
+                              /// Edit Task
+                              IconButton(
+                                onPressed: () {
+                                  // Edit task functionality
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      TextEditingController editController =
+                                          TextEditingController();
+                                      editController.text =
+                                          dataList[index]['note'];
+                                      return AlertDialog(
+                                        title: const Text('Edit Task'),
+                                        content: TextField(
+                                          controller: editController,
+                                          decoration: const InputDecoration(
+                                            border: OutlineInputBorder(),
+                                            labelText: 'Edit your task',
+                                          ),
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.of(context).pop();
+                                            },
+                                            child: const Text('Cancel'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              sqlDb.updateData(
+                                                "UPDATE notes SET note = '${editController.text}' WHERE id = ${dataList[index]['id']}",
+                                              );
 
-              Expanded(child: customListOfTasks()),
+                                              setState(() {});
+                                              Navigator.of(
+                                                context,
+                                              ).pushReplacementNamed(
+                                                '/taskspage',
+                                              );
+                                            },
+                                            child: const Text('Save'),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                },
+                                icon: Icon(Icons.edit),
+                              ),
+
+                              SizedBox(
+                                width: 300,
+                                ///////////////////Listtile ////////////////////
+                                child: ListTile(
+                                  title: Text(dataList[index]['title']),
+                                  subtitle: Text(dataList[index]['note']),
+
+                                  leading: Checkbox(
+                                    value: dataList[index]['done'] == 1
+                                        ? true
+                                        : false,
+                                    onChanged: (value) {
+                                      // Handle checkbox state change
+                                      // value = !value!;
+                                      value!
+                                          ? {
+                                              sqlDb.updateData(
+                                                "UPDATE notes SET done = 1 WHERE id = ${dataList[index]['id']}",
+                                              ),
+                                              doneTasks++,
+                                            }
+                                          : {
+                                              sqlDb.updateData(
+                                                "UPDATE notes SET done = 0 WHERE id = ${dataList[index]['id']}",
+                                              ),
+                                              doneTasks--,
+                                            };
+                                      Navigator.pushReplacementNamed(
+                                        context,
+                                        '/taskspage',
+                                      );
+                                      setState(() {});
+                                    },
+                                  ),
+
+                                  trailing: IconButton(
+                                    icon: const Icon(Icons.delete),
+                                    onPressed: () async {
+                                      if (dataList[index]['done'] == 1) {
+                                        doneTasks--;
+                                      }
+                                      int response = await sqlDb.deleteData(
+                                        "DELETE FROM notes WHERE id = ${dataList[index]['id']}",
+                                      );
+                                      if (response > 0) {
+                                        dataList.removeWhere(
+                                          (item) =>
+                                              item['id'] ==
+                                              dataList[index]['id'],
+                                        );
+                                      }
+                                      // totalTasks--;
+                                      // Navigator.pushReplacementNamed(
+                                      //   context,
+                                      //   '/taskspage',
+                                      // );
+
+                                      setState(() {});
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
             ],
           ),
         ),
@@ -100,7 +244,18 @@ class _TasksPageState extends State<TasksPage> {
           BottomNavigationBarItem(
             icon: IconButton(
               onPressed: () {
-                Navigator.of(context).pushNamed('/profilepage');
+                // Navigator.of(context).pushNamed('/profilepage');
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProfilePage(
+                      totalTasks: dataList.length,
+                      doneTasks: doneTasks,
+                      userName: widget.userName,
+                    ),
+                  ),
+                  (_) => false,
+                );
               },
               icon: const Icon(Icons.person),
             ),
@@ -109,112 +264,6 @@ class _TasksPageState extends State<TasksPage> {
           ),
         ],
       ),
-    );
-  }
-
-  FutureBuilder<List<Map<dynamic, dynamic>>> customListOfTasks() {
-    return FutureBuilder(
-      future: sqlDb.readData("SELECT * FROM notes"),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        dataList = snapshot.data as List<Map<String, dynamic>>;
-        // dataList = dataList;
-
-        return ListView.builder(
-          itemCount: dataList.length,
-          itemBuilder: (context, index) {
-            return Row(
-              children: [
-                /// Edit Task
-                IconButton(
-                  onPressed: () {
-                    // Edit task functionality
-                    showDialog(
-                      context: context,
-                      builder: (context) {
-                        TextEditingController editController =
-                            TextEditingController();
-                        editController.text = dataList[index]['note'];
-                        return AlertDialog(
-                          title: const Text('Edit Task'),
-                          content: TextField(
-                            controller: editController,
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              labelText: 'Edit your task',
-                            ),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                              child: const Text('Cancel'),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                sqlDb.updateData(
-                                  "UPDATE notes SET note = '${editController.text}' WHERE id = ${dataList[index]['id']}",
-                                );
-                                setState(() {});
-                                Navigator.of(context).pop();
-                              },
-                              child: const Text('Save'),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                  icon: Icon(Icons.edit),
-                ),
-
-                SizedBox(
-                  width: 300,
-                  child: ListTile(
-                    title: Text(dataList[index]['title']),
-                    subtitle: Text(dataList[index]['note']),
-                    leading: Checkbox(
-                      value: dataList[index]['done'] == 1 ? true : false,
-                      onChanged: (value) {
-                        // Handle checkbox state change
-                        // value = !value!;
-                        value!
-                            ? {
-                                sqlDb.updateData(
-                                  "UPDATE notes SET done = 1 WHERE id = ${dataList[index]['id']}",
-                                ),
-                                doneTasks++,
-                              }
-                            : {
-                                sqlDb.updateData(
-                                  "UPDATE notes SET done = 0 WHERE id = ${dataList[index]['id']}",
-                                ),
-                                doneTasks--,
-                              };
-
-                        setState(() {});
-                      },
-                    ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete),
-                      onPressed: () async {
-                        await sqlDb.deleteData(
-                          "DELETE FROM notes WHERE id = ${dataList[index]['id']}",
-                        );
-                        setState(() {});
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
     );
   }
 }

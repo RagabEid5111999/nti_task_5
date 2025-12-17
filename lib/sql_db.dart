@@ -76,7 +76,14 @@ class SqlDb {
   numOfRows(String sql) async {
     Database? mydb = await database;
     int response = Sqflite.firstIntValue(await mydb!.rawQuery(sql))!;
+    print("$response ==============================");
     return response;
+  }
+
+  numbofTasks() {
+    numOfRows("SELECT COUNT(*) FROM notes").then((value) {
+      return value;
+    });
   }
 
   copyOfDatabaseAsList(String sql) async {

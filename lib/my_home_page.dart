@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nti_task_5/shared_preferances_class.dart';
+import 'package:nti_task_5/tasks_page.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -11,6 +12,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  String userName = '';
+
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   bool isPasswordVisible = true;
@@ -76,10 +79,16 @@ class _MyHomePageState extends State<MyHomePage> {
                       SnackBar(content: Text('Invalid email or password')),
                     );
                   } else {
+                    userName = userData[0];
                     ScaffoldMessenger.of(
                       context,
                     ).showSnackBar(SnackBar(content: Text('Login Successful')));
-                    Navigator.pushNamed(context, '/taskspage');
+                    // Navigator.pushNamed(context, '/taskspage');
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => TasksPage(userName: userName),
+                      ),
+                    );
                   }
                 },
                 child: Text('Login'),

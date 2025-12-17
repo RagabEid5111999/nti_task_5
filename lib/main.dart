@@ -16,9 +16,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       routes: {
-        '/taskspage': (context) => const TasksPage(),
+        '/taskspage': (context) => const TasksPage(userName: "   "),
         '/signup': (context) => SignUp(),
-        '/profilepage': (context) => const ProfilePage(),
+        '/profilepage': (context) =>
+            const ProfilePage(totalTasks: 0, doneTasks: 0, userName: ''),
       },
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
